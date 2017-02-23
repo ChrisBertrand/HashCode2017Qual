@@ -31,7 +31,7 @@ public class Main
         System.out.println("processing " + fl);
         
         Reader reader = new Reader(fl);
-        reader.print();
+        
         
         Solver solver = new Solver(reader);
         
