@@ -99,7 +99,7 @@ public class Reader
         }
         fileReader.close();
         
-        print();
+       // print();
     }
 
 

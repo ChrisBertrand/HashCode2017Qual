@@ -9,6 +9,7 @@ import java.util.Random;
 
 import com.hashcode.Reader.Command;
 import com.hashcode.Reader.Request;
+import com.hashcode.Reader.Video;
 
 public class Solver
 {
@@ -84,18 +85,24 @@ public class Solver
             int sum =0;
             for(RequestScore rq:dpList)
             {
-                sum = sum +reader.videoList.get(rq.request.vID).size;
-                if(sum<reader.cacheSize)
-                    videoIds.add(rq.request.vID);
+                boolean found = false;
+                for(Integer vid: videoIds)
+                {
+                    if(vid.intValue() == rq.request.vID)
+                        found=true;
+                }
                 
+                if(!found)
+                {
+                    sum = sum +reader.videoList.get(rq.request.vID).size;
+                    if(sum<reader.cacheSize)
+                        videoIds.add(rq.request.vID);
+                }
             }
             
             Command command = new Command(j, videoIds);
             commands.add(command);
         }
-    
-        
-        
         
     }
 
