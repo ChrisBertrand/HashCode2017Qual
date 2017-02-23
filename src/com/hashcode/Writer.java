@@ -23,6 +23,8 @@ public class Writer
         
         for(Command command:commands)
         {
+            System.out.println(command.toString());
+            
             fos.write(command.toString().getBytes());
             fos.write("\n".getBytes());
         }
