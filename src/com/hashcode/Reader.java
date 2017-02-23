@@ -4,6 +4,8 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.StringTokenizer;
 
 public class Reader
@@ -15,9 +17,13 @@ public class Reader
     int cacheSize;
     
     ArrayList<Video> videoList = new ArrayList<Video>();
+    ArrayList<EndPoint> endPointList = new ArrayList<EndPoint>();
+    ArrayList<Request> requests = new ArrayList<Request>();
+    
     
     
     private ArrayList<String[]> lines;
+    
     
     public Reader(File file) throws Exception
     {
@@ -29,7 +35,7 @@ public class Reader
         BufferedReader bufferedReader = new BufferedReader(fileReader);
         String line;
         
-        
+        int countOfConnectedCache = 0;
         int lineCount =0;
         int epId = 0;
         while ( (line = bufferedReader.readLine()) != null)
@@ -59,15 +65,41 @@ public class Reader
                 continue;
             }
             
-            if(lineCount>1 )
+            if(lineCount>1 && countOfConnectedCache==0 && endPointList.size()< noOfEp)
             {
                 int latencyToDC = Integer.valueOf(words[0]);
-                int countOfConnectedCache = Integer.valueOf(words[1]);
+                countOfConnectedCache = Integer.valueOf(words[1]);
                 
+                EndPoint ep = new EndPoint(epId, latencyToDC, noOfCaches);
+                endPointList.add(ep);
+                
+                continue;
             }
+            
+            if(lineCount>1 && countOfConnectedCache!=0 )
+            {
+                int cacheId = Integer.valueOf(words[0]);
+                int latency = Integer.valueOf(words[1]);
+                
+                EndPoint ep = endPointList.get(endPointList.size()-1);
+                ep.getCacheLatency()[cacheId] = latency;
+                ep.getConnected()[cacheId] = true;
+                
+                countOfConnectedCache--;
+                
+                continue;
+            }
+            
+            Request request = new Request(Integer.valueOf(words[2]), 
+                                          Integer.valueOf(words[0]), 
+                                          Integer.valueOf(words[1]));
+            
+            requests.add(request);
             
         }
         fileReader.close();
+        
+        print();
     }
 
 
@@ -98,10 +130,23 @@ public class Reader
 
     public void print()
     {
+        log("noOfVideos" + noOfVideos);
+        log("noOfEp" + noOfEp);
+        log("noOfRequests" + noOfRequests);
+        log("noOfCaches" + noOfCaches);
+        log("cacheSize" + cacheSize);
         
-        
+        log("videoList" + videoList);
+        log("endPointList" + endPointList);
+        log("requests" + requests);
     }
  
+    private void log(String string)
+    {
+        System.out.println(string);
+        
+    }
+
     public static class Video
     {
         int id;
@@ -128,6 +173,11 @@ public class Reader
         {
             this.size = size;
         }
+        @Override
+        public String toString()
+        {
+            return "Video [id=" + id + ", size=" + size + "]";
+        }
         
         
     }
@@ -138,14 +188,15 @@ public class Reader
         int latencyDataCenter;
         boolean []connected;
         int []cacheLatency;
-        public EndPoint(int endPointId, int latencyDataCenter, boolean[] connected,
-                        int[] cacheLatency)
+        public EndPoint(int endPointId, int latencyDataCenter, int cacheCount)
         {
             super();
             this.endPointId = endPointId;
             this.latencyDataCenter = latencyDataCenter;
-            this.connected = connected;
-            this.cacheLatency = cacheLatency;
+            
+            connected = new boolean[cacheCount];
+            cacheLatency = new int[cacheCount];
+            
         }
         public int getEndPointId()
         {
@@ -179,6 +230,13 @@ public class Reader
         {
             this.cacheLatency = cacheLatency;
         }
+        @Override
+        public String toString()
+        {
+            return "EndPoint [endPointId=" + endPointId + ", latencyDataCenter=" + latencyDataCenter
+                   + ", connected=" + Arrays.toString(connected) + ", cacheLatency="
+                   + Arrays.toString(cacheLatency) + "]";
+        }
         
     }
     
@@ -207,6 +265,11 @@ public class Reader
         public void setCapacity(int capacity)
         {
             this.capacity = capacity;
+        }
+        @Override
+        public String toString()
+        {
+            return "Cahce [id=" + id + ", capacity=" + capacity + "]";
         }
         
     }
@@ -247,6 +310,12 @@ public class Reader
         {
             this.sourceEndPointId = sourceEndPointId;
         }
+        @Override
+        public String toString()
+        {
+            return "Request [nOfrequest=" + nOfrequest + ", vID=" + vID + ", sourceEndPointId="
+                   + sourceEndPointId + "]";
+        }
         
         
     }
@@ -276,6 +345,11 @@ public class Reader
         public void setVideoIds(int[] videoIds)
         {
             this.videoIds = videoIds;
+        }
+        @Override
+        public String toString()
+        {
+            return "Command [cacheID=" + cacheID + ", videoIds=" + Arrays.toString(videoIds) + "]";
         }
         
         
