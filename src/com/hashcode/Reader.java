@@ -86,5 +86,35 @@ public class Reader
             System.out.print("\n");
         }
     }
+ 
+    public static class Video
+    {
+        int id;
+        int size;
+        
+    }
+    
+    public static class EndPoint
+    {
+        int endPointId;
+        int latencyDataCenter;
+        boolean []connected;
+        int []cacheLatency;
+        
+    }
+    
+    public static class Cahce
+    {
+        int id;
+        int capacity;
+    }
+    
+    public static class Request
+    {
+        int nOfrequest;
+        int vID;
+        int sourceEndPointId;
+    }
+    
     
 }
