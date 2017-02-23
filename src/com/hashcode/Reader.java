@@ -8,10 +8,17 @@ import java.util.StringTokenizer;
 
 public class Reader
 {
-    public int[] info = null;
-    public byte [][] array = null;
-
+    int noOfVideos;
+    int noOfEp;
+    int noOfRequests;
+    int noOfCaches;
+    int cacheSize;
+    
+    ArrayList<Video> videoList = new ArrayList<Video>();
+    
+    
     private ArrayList<String[]> lines;
+    
     public Reader(File file) throws Exception
     {
         
@@ -22,22 +29,42 @@ public class Reader
         BufferedReader bufferedReader = new BufferedReader(fileReader);
         String line;
         
-        int row = 0;
+        
+        int lineCount =0;
+        int epId = 0;
         while ( (line = bufferedReader.readLine()) != null)
         {
             String[] words = parse(line);
-            
-            if(info ==null)
+            if(lineCount==0)
             {
-                info = parseWordsIntoInts(words);
+                noOfVideos = Integer.valueOf(words[0]);
+                noOfEp = Integer.valueOf(words[1]);
+                noOfRequests = Integer.valueOf(words[2]);
+                noOfCaches = Integer.valueOf(words[3]);
+                cacheSize = Integer.valueOf(words[4]);
+                
+                lineCount++;
                 continue;
             }
-            if(array==null && info !=null)
+            
+            if(lineCount==1)
             {
-                array = new byte[info[0]][info[1]];
+                for(int i=0;i<noOfVideos;i++)
+                {
+                    Video video = new Video(i, Integer.valueOf(words[i]));
+                    videoList.add(video);
+                }
+                
+                lineCount++;
+                continue;
             }
             
-            array[row++] = words[0].getBytes();
+            if(lineCount>1 )
+            {
+                int latencyToDC = Integer.valueOf(words[0]);
+                int countOfConnectedCache = Integer.valueOf(words[1]);
+                
+            }
             
         }
         fileReader.close();
@@ -71,26 +98,37 @@ public class Reader
 
     public void print()
     {
-        System.out.println("Row " +  info[0]);
-        System.out.println("Col " +  info[1]);
-        System.out.println("Min " +  info[2]);
-        System.out.println("max " +  info[3]);
         
-        for(int i=0;i<array.length;i++)
-        {
-            for(int j=0;j<array[i].length;j++)
-            {
-                System.out.print(array[i][j] + ",");
-            }
-            
-            System.out.print("\n");
-        }
+        
     }
  
     public static class Video
     {
         int id;
         int size;
+        public Video(int id, int size)
+        {
+            super();
+            this.id = id;
+            this.size = size;
+        }
+        public int getId()
+        {
+            return id;
+        }
+        public void setId(int id)
+        {
+            this.id = id;
+        }
+        public int getSize()
+        {
+            return size;
+        }
+        public void setSize(int size)
+        {
+            this.size = size;
+        }
+        
         
     }
     
@@ -100,6 +138,47 @@ public class Reader
         int latencyDataCenter;
         boolean []connected;
         int []cacheLatency;
+        public EndPoint(int endPointId, int latencyDataCenter, boolean[] connected,
+                        int[] cacheLatency)
+        {
+            super();
+            this.endPointId = endPointId;
+            this.latencyDataCenter = latencyDataCenter;
+            this.connected = connected;
+            this.cacheLatency = cacheLatency;
+        }
+        public int getEndPointId()
+        {
+            return endPointId;
+        }
+        public void setEndPointId(int endPointId)
+        {
+            this.endPointId = endPointId;
+        }
+        public int getLatencyDataCenter()
+        {
+            return latencyDataCenter;
+        }
+        public void setLatencyDataCenter(int latencyDataCenter)
+        {
+            this.latencyDataCenter = latencyDataCenter;
+        }
+        public boolean[] getConnected()
+        {
+            return connected;
+        }
+        public void setConnected(boolean[] connected)
+        {
+            this.connected = connected;
+        }
+        public int[] getCacheLatency()
+        {
+            return cacheLatency;
+        }
+        public void setCacheLatency(int[] cacheLatency)
+        {
+            this.cacheLatency = cacheLatency;
+        }
         
     }
     
@@ -107,6 +186,29 @@ public class Reader
     {
         int id;
         int capacity;
+        public Cahce(int id, int capacity)
+        {
+            super();
+            this.id = id;
+            this.capacity = capacity;
+        }
+        public int getId()
+        {
+            return id;
+        }
+        public void setId(int id)
+        {
+            this.id = id;
+        }
+        public int getCapacity()
+        {
+            return capacity;
+        }
+        public void setCapacity(int capacity)
+        {
+            this.capacity = capacity;
+        }
+        
     }
     
     public static class Request
@@ -114,7 +216,69 @@ public class Reader
         int nOfrequest;
         int vID;
         int sourceEndPointId;
+        public Request(int nOfrequest, int vID, int sourceEndPointId)
+        {
+            super();
+            this.nOfrequest = nOfrequest;
+            this.vID = vID;
+            this.sourceEndPointId = sourceEndPointId;
+        }
+        public int getnOfrequest()
+        {
+            return nOfrequest;
+        }
+        public void setnOfrequest(int nOfrequest)
+        {
+            this.nOfrequest = nOfrequest;
+        }
+        public int getvID()
+        {
+            return vID;
+        }
+        public void setvID(int vID)
+        {
+            this.vID = vID;
+        }
+        public int getSourceEndPointId()
+        {
+            return sourceEndPointId;
+        }
+        public void setSourceEndPointId(int sourceEndPointId)
+        {
+            this.sourceEndPointId = sourceEndPointId;
+        }
+        
+        
     }
     
+    public static class Command
+    {
+        int cacheID;
+        int []videoIds;
+        public Command(int cacheID, int[] videoIds)
+        {
+            super();
+            this.cacheID = cacheID;
+            this.videoIds = videoIds;
+        }
+        public int getCacheID()
+        {
+            return cacheID;
+        }
+        public void setCacheID(int cacheID)
+        {
+            this.cacheID = cacheID;
+        }
+        public int[] getVideoIds()
+        {
+            return videoIds;
+        }
+        public void setVideoIds(int[] videoIds)
+        {
+            this.videoIds = videoIds;
+        }
+        
+        
+    }
     
 }
