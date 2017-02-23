@@ -1,7 +1,7 @@
 fclose all;
 
 % Read in data
-fName = 'me_at_the_zoo.in';
+fName = 'videos_worth_spreading.in';
 Data = ReadFile(fName);
 save([fName '.hash'],'Data');
 
@@ -32,9 +32,29 @@ for iCache = 1:Data.nC
 
                 % Sum together
                 Results(iCache, iVideo) = Results(iCache, iVideo) + Score;
-            end
-            
+            end 
         end
-        
     end
+end
+
+VideosForCaches = cell(1,Data.nC);
+
+for iCache = 1:Data.nC
+    [~,idx] = sort(Results(iCache,:),'descend');
+    nextIdx = 0;
+    while((sum(Data.V(VideosForCaches{iCache}))+Data.V(idx(nextIdx+1))) < Data.sC)
+        nextIdx = nextIdx + 1;
+        VideosForCaches{iCache} = [VideosForCaches{iCache} idx(nextIdx)];
+    end
+end
+
+outfile = [fName '.out'];
+hout = fopen(outfile,'w');
+fprintf(hout, '%d\n', Data.nC);
+for iCache = 1:Data.nC
+    fprintf(hout, '%d ', iCache-1);
+    for iVideo = 1:numel(VideosForCaches{iCache})
+        fprintf(hout, '%d ', VideosForCaches{iCache}(iVideo)-1);
+    end
+    fprintf(hout, '\n');
 end
