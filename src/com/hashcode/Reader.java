@@ -323,8 +323,8 @@ public class Reader
     public static class Command
     {
         int cacheID;
-        int []videoIds;
-        public Command(int cacheID, int[] videoIds)
+        ArrayList <Integer> videoIds = new ArrayList<Integer>();
+        public Command(int cacheID, ArrayList <Integer> videoIds)
         {
             super();
             this.cacheID = cacheID;
@@ -338,18 +338,26 @@ public class Reader
         {
             this.cacheID = cacheID;
         }
-        public int[] getVideoIds()
+
+        public ArrayList <Integer> getVideoIds()
         {
             return videoIds;
         }
-        public void setVideoIds(int[] videoIds)
+        public void setVideoIds(ArrayList <Integer> videoIds)
         {
             this.videoIds = videoIds;
         }
         @Override
         public String toString()
         {
-            return "Command [cacheID=" + cacheID + ", videoIds=" + Arrays.toString(videoIds) + "]";
+            StringBuilder sb = new StringBuilder();
+            
+            for(Integer i:videoIds)
+            {
+                sb.append(i.toString());
+                sb.append(" ");
+            }
+            return "" + cacheID + " " + sb.toString();
         }
         
         
