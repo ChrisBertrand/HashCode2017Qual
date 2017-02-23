@@ -3,6 +3,8 @@ package com.hashcode;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Enumeration;
+import java.util.Hashtable;
 import java.util.Random;
 
 import com.hashcode.Reader.Command;
@@ -117,14 +119,28 @@ public class Solver
     {
         ArrayList <Request> result = new ArrayList <Request>();
         
-        
+        Hashtable<Request, Request> table = new Hashtable<Request, Request>();
         for(Request req:requests)
         {
-            
+            Request existingReq = table.get(req);
+            if(existingReq == null)
+            {
+                table.put(req, req);
+            }
+            else
+            {
+               existingReq.nOfrequest += req.nOfrequest;
+            }
         }
         
+        Enumeration <Request> keys = table.keys();
         
-        return requests;
+        while(keys.hasMoreElements())
+        {
+            result.add(keys.nextElement());
+        }
+        
+        return result;
     }
 
 

@@ -316,6 +316,31 @@ public class Reader
             return "Request [nOfrequest=" + nOfrequest + ", vID=" + vID + ", sourceEndPointId="
                    + sourceEndPointId + "]";
         }
+        @Override
+        public int hashCode()
+        {
+            final int prime = 31;
+            int result = 1;
+            result = prime * result + sourceEndPointId;
+            result = prime * result + vID;
+            return result;
+        }
+        @Override
+        public boolean equals(Object obj)
+        {
+            if (this == obj)
+                return true;
+            if (obj == null)
+                return false;
+            if (getClass() != obj.getClass())
+                return false;
+            Request other = (Request) obj;
+            if (sourceEndPointId != other.sourceEndPointId)
+                return false;
+            if (vID != other.vID)
+                return false;
+            return true;
+        }
         
         
     }
