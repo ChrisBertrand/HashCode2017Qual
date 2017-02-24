@@ -17,7 +17,8 @@ public class Main
             File[] files = file.listFiles();
             for(File fl:files)
             {
-                process(fl);
+                if(fl.getName().endsWith(".in"))
+                    process(fl);
             }
         }
         else

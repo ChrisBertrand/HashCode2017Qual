@@ -136,9 +136,9 @@ public class Reader
         log("noOfCaches" + noOfCaches);
         log("cacheSize" + cacheSize);
         
-        log("videoList" + videoList);
-        log("endPointList" + endPointList);
-        log("requests" + requests);
+        log("videoList" + videoList.size());
+        log("endPointList" + endPointList.size());
+        log("requests" + requests.size());
     }
  
     private void log(String string)
@@ -279,6 +279,7 @@ public class Reader
         int nOfrequest;
         int vID;
         int sourceEndPointId;
+        boolean dealtWith;
         public Request(int nOfrequest, int vID, int sourceEndPointId)
         {
             super();
@@ -341,6 +342,16 @@ public class Reader
                 return false;
             return true;
         }
+        public boolean isDealtWith()
+        {
+            return dealtWith;
+        }
+        public void setDealtWith(boolean dealtWith)
+        {
+            this.dealtWith = dealtWith;
+        }
+        
+        
         
         
     }

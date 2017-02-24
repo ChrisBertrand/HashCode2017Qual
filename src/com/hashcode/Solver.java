@@ -35,37 +35,53 @@ public class Solver
             }
         }
         
-        for(int i=0;i<costMap.length;i++)
-        {
-            double leastScore = Double.POSITIVE_INFINITY;
-            int leastIndex = -1;
-            for(int j=0;j<reader.noOfCaches;j++)
-            {
-                if(costMap[i][j] < leastScore)
-                {
-                    leastIndex = j;
-                    leastScore = costMap[i][j];
-                }
-            }
-            
-            for(int j=0;j<reader.noOfCaches;j++)
-            {
-                if(j!=leastIndex)
-                    costMap[i][j] = Double.POSITIVE_INFINITY;
-            }
-        }
+        reader.print();
+        
+        
+        
+        
+        
+//        
+//        for(int i=0;i<costMap.length;i++)
+//        {
+//            double leastScore = Double.POSITIVE_INFINITY;
+//            int leastIndex = -1;
+//            for(int j=0;j<reader.noOfCaches;j++)
+//            {
+//                if(costMap[i][j] < leastScore)
+//                {
+//                    leastIndex = j;
+//                    leastScore = costMap[i][j];
+//                }
+//            }
+//            
+//            for(int j=0;j<reader.noOfCaches;j++)
+//            {
+//                if(j!=leastIndex)
+//                    costMap[i][j] = Double.POSITIVE_INFINITY;
+//            }
+//        }
+        
+        
+        ArrayList<RequestScore> dpList[] = new ArrayList[reader.noOfCaches];
+        int[]dpListIndex = new int[reader.noOfCaches];
+        
+        ArrayList<Integer> videoIds[] = new ArrayList[reader.noOfCaches];
+        int []usedCache = new int[reader.noOfCaches];
         
         for(int j=0;j<reader.noOfCaches;j++)
         {
-            ArrayList<RequestScore> dpList = new ArrayList<RequestScore>();
+            dpList[j] = new ArrayList<RequestScore>();
+            videoIds[j] = new ArrayList<Integer>();
+            
+            
             for(int i=0;i<costMap.length;i++)
             {
                 Request request = reader.requests.get(i);
-                dpList.add(new RequestScore(request, costMap[i][j]));
-            
+                dpList[j].add(new RequestScore(request, costMap[i][j]));
             }
             
-            dpList.sort(new Comparator <RequestScore>()
+            dpList[j].sort(new Comparator <RequestScore>()
             {
                 
                 @Override
@@ -81,29 +97,141 @@ public class Solver
                 }
             });
             
-            ArrayList <Integer> videoIds = new ArrayList<Integer>();
-            int sum =0;
-            for(RequestScore rq:dpList)
+        }
+
+        
+        System.out.println("sorted");
+        
+        
+        
+        while(listsNotEmpty(dpList, dpListIndex) && cacheHasCapacity(usedCache))
+        {
+            RequestScore[] nextBest = getNextBestValidRequests(dpList, dpListIndex);
+            
+            RequestScore bestReq = null;
+            int bestIndex = -1;
+            for(int j=0;j<nextBest.length;j++)
+            {
+                if(bestReq==null && nextBest[j]!=null)
+                {
+                    bestReq = nextBest[j];
+                    bestIndex = j;
+                }
+                
+                if(nextBest[j]!=null && nextBest[j].score < bestReq.score)
+                {
+                    bestReq = nextBest[j];
+                    bestIndex = j;
+                }
+            }
+            
+            if(bestReq!=null && bestIndex!=-1)
             {
                 boolean found = false;
-                for(Integer vid: videoIds)
+                for(Integer vid: videoIds[bestIndex])
                 {
-                    if(vid.intValue() == rq.request.vID)
+                    if(vid.intValue() == bestReq.request.vID)
+                    {
                         found=true;
+                        
+                        bestReq.request.dealtWith = true;
+                        //System.out.println("ARequest : " + bestReq);
+
+                    }
                 }
                 
                 if(!found)
                 {
-                    sum = sum +reader.videoList.get(rq.request.vID).size;
-                    if(sum<reader.cacheSize)
-                        videoIds.add(rq.request.vID);
+                    int vSize = reader.videoList.get(bestReq.request.vID).size;
+                    
+                    if(usedCache[bestIndex] + vSize<reader.cacheSize)
+                    {
+                        usedCache[bestIndex] = usedCache[bestIndex] + vSize;
+                        videoIds[bestIndex].add(bestReq.request.vID);
+                        
+                        bestReq.request.dealtWith = true;
+                        //System.out.println("Request : " + bestReq);
+                    }
+                    else
+                    {
+                        dpListIndex[bestIndex]++;
+                        //dpList[bestIndex].remove(0);
+                    }
+                }
+            }
+        }
+        
+        
+        for(int j=0;j<videoIds.length;j++)
+        {
+            if(videoIds[j].size()>0)
+            {   
+                Command command = new Command(j, videoIds[j]);
+                commands.add(command);
+            }
+        }
+    }
+
+
+    private RequestScore[] getNextBestValidRequests(ArrayList <RequestScore>[] dpList, int[] dpListIndex)
+    {
+        RequestScore[] result = new RequestScore[dpList.length];
+        
+        int ts = 0;
+        for(int i=0;i<result.length;i++)
+        {
+            while(dpListIndex[i] < dpList[i].size())
+            {
+                RequestScore rs = dpList[i].get(dpListIndex[i]);
+                if(rs.request.dealtWith)
+                {
+                    dpListIndex[i]++;
+                }
+                else
+                {
+                    result[i] = rs;
+                    break;
                 }
             }
             
-            Command command = new Command(j, videoIds);
-            commands.add(command);
+            int s = dpList[i].size() - dpListIndex[i];
+            ts+=s;
+            
         }
         
+        if(ts%10000==0)
+            System.out.println("req: " + ts);
+        return result;
+    }
+
+
+
+    private boolean cacheHasCapacity(int[] usedCache)
+    {
+        boolean result = false;
+        
+        for(int i=0;i<usedCache.length;i++)
+        {
+            if(usedCache[i] < reader.cacheSize)
+                return true;
+        }
+        
+        return result;
+    }
+
+
+
+    private boolean listsNotEmpty(ArrayList <RequestScore>[] dpList, int[] dpListIndex)
+    {
+        boolean result = false;
+        
+        for(int i=0;i<dpList.length;i++)
+        {
+            if(dpList[i].size() - dpListIndex[i] > 0)
+                return true;
+        }
+        
+        return result;
     }
 
 
@@ -114,7 +242,8 @@ public class Solver
         
         if(reader.endPointList.get(request.sourceEndPointId).getConnected()[cacheId])
         {
-            result = request.nOfrequest * reader.endPointList.get(request.sourceEndPointId).getCacheLatency()[cacheId];
+            int videoSize = reader.videoList.get(request.vID).size;
+            result = request.nOfrequest * reader.endPointList.get(request.sourceEndPointId).getCacheLatency()[cacheId] ;
             
         }
         return result;
@@ -167,6 +296,11 @@ public class Solver
             super();
             this.request = request;
             this.score = score;
+        }
+        @Override
+        public String toString()
+        {
+            return "RequestScore [request=" + request + ", score=" + score + "]";
         }
         
     }
