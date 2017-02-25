@@ -31,9 +31,31 @@ public class Solver
             for(int j=0;j<reader.noOfCaches;j++)
             {
                 Request request = reader.requests.get(i);
-                costMap[i][j] = computeCost(request, j);
+                //costMap[i][j] = computeCost(request, j);
+                
+                costMap[i][j] = computeSavings(request, j);
             }
         }
+        
+        double max = Double.NEGATIVE_INFINITY;
+        
+        for(int i=0;i<costMap.length;i++)
+        {
+            for(int j=0;j<reader.noOfCaches;j++)
+            {
+                if(max<costMap[i][j])
+                    max = costMap[i][j];
+            }
+        }
+        
+        for(int i=0;i<costMap.length;i++)
+        {
+            for(int j=0;j<reader.noOfCaches;j++)
+            {
+                costMap[i][j] = max - costMap[i][j];
+            }
+        }
+        
         
         reader.print();
         
@@ -102,8 +124,7 @@ public class Solver
         
         System.out.println("sorted");
         
-        
-        
+       
         while(listsNotEmpty(dpList, dpListIndex) && cacheHasCapacity(usedCache))
         {
             RequestScore[] nextBest = getNextBestValidRequests(dpList, dpListIndex);
@@ -116,12 +137,28 @@ public class Solver
                 {
                     bestReq = nextBest[j];
                     bestIndex = j;
+                    continue;
                 }
                 
-                if(nextBest[j]!=null && nextBest[j].score < bestReq.score)
+                if(nextBest[j]!=null )
                 {
-                    bestReq = nextBest[j];
-                    bestIndex = j;
+                    if( nextBest[j].score < bestReq.score)
+                    {
+                        bestReq = nextBest[j];
+                        bestIndex = j;
+                    }
+                    else if( nextBest[j].score == bestReq.score)
+                    {
+                        int selectedCacheCapacity = reader.cacheSize - usedCache[bestIndex];
+                        int candidateCacheCapacity = reader.cacheSize - usedCache[j];
+                        
+                        if(candidateCacheCapacity > selectedCacheCapacity)
+                        {
+                            bestReq = nextBest[j];
+                            bestIndex = j;
+                        }
+                    }
+
                 }
             }
             
@@ -160,7 +197,9 @@ public class Solver
                 }
             }
         }
-        
+            
+            
+
         
         for(int j=0;j<videoIds.length;j++)
         {
@@ -170,6 +209,53 @@ public class Solver
                 commands.add(command);
             }
         }
+        
+        
+        int sum = 0;
+        
+        for(int i=0;i<usedCache.length;i++)
+            sum+=usedCache[i];
+        
+        System.out.println("Used Cache " + sum + ", total " + (reader.cacheSize * reader.noOfCaches));
+        
+        double score = computeScore(commands);
+        System.out.println("Score: " + score);
+    }
+
+    private double computeScore(ArrayList <Command> commands)
+    {
+        double total =0 ;
+        
+        for(Request request: reader.requests)
+        {
+            int cacheId = -1;
+            int bestLatency = Integer.MAX_VALUE;
+            
+            for(Command command: commands)
+            {
+                if(command.videoIds.contains(request.vID))
+                {
+                    int cacheLatency = reader.endPointList.get(request.sourceEndPointId).getCacheLatency()[command.cacheID];
+                    if(cacheLatency<bestLatency)
+                    {
+                        cacheId = command.cacheID;
+                    }
+                }        
+            }
+            
+            if(cacheId!=-1)
+            {
+                double latencySaving = reader.endPointList.get(request.sourceEndPointId).latencyDataCenter 
+                        - reader.endPointList.get(request.sourceEndPointId).getCacheLatency()[cacheId];
+                total += latencySaving * request.nOfrequest;
+            }
+            
+        }
+        
+        
+        
+        
+        return total * 1000.0 / reader.totalNoOfRequests;
     }
 
 
@@ -249,6 +335,25 @@ public class Solver
         return result;
     }
 
+    private double computeSavings(Request request, int cacheId)
+    {
+        double result = 0;
+        
+        if(reader.endPointList.get(request.sourceEndPointId).getConnected()[cacheId])
+        {
+            int videoSize = reader.videoList.get(request.vID).size;
+            
+            double latencySaving = reader.endPointList.get(request.sourceEndPointId).latencyDataCenter 
+                    - reader.endPointList.get(request.sourceEndPointId).getCacheLatency()[cacheId] ; 
+            
+            double requestW = request.nOfrequest / reader.totalNoOfRequests;
+            double sizeW = videoSize / reader.totalVideoSize;
+            
+            result = requestW * latencySaving / sizeW ;
+            
+        }
+        return result;
+    }
 
 
     private ArrayList <Request> reduce(ArrayList <Request> requests)

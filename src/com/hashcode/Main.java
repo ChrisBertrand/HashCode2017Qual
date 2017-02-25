@@ -34,7 +34,7 @@ public class Main
         Reader reader = new Reader(fl);
         
         
-        Solver solver = new Solver(reader);
+        Solver2 solver = new Solver2(reader);
         
         double bestCoverage = 0;
         ArrayList<Command> commands = solver.getCommands();

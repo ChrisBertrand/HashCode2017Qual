@@ -15,6 +15,9 @@ public class Reader
     int noOfRequests;
     int noOfCaches;
     int cacheSize;
+    int totalNoOfRequests;
+    int totalVideoSize;
+    int totalCacheSize;
     
     ArrayList<Video> videoList = new ArrayList<Video>();
     ArrayList<EndPoint> endPointList = new ArrayList<EndPoint>();
@@ -99,6 +102,18 @@ public class Reader
         }
         fileReader.close();
         
+        
+        for(Request r:requests)
+        {
+            totalNoOfRequests +=r.nOfrequest;
+        }
+        
+        totalCacheSize = noOfCaches * cacheSize;
+        
+        
+        for(Video v:videoList)
+            totalVideoSize += v.size;
+        
        // print();
     }
 
@@ -136,9 +151,16 @@ public class Reader
         log("noOfCaches" + noOfCaches);
         log("cacheSize" + cacheSize);
         
-        log("videoList" + videoList.size());
-        log("endPointList" + endPointList.size());
-        log("requests" + requests.size());
+        log("videoList#" + videoList.size());
+        log("endPointList#" + endPointList.size());
+        log("requests#" + requests.size());
+        
+        
+        log("totalNoOfRequests" + this.totalNoOfRequests);
+        log("totalCacheSize" + this.totalCacheSize);
+        log("totalVideoSize" + this.totalVideoSize);
+        
+        
     }
  
     private void log(String string)
